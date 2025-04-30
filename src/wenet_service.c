@@ -1,5 +1,4 @@
 #include "wenet_service.h"
-#include "param_stack.h"
 
 BT_GATT_SERVICE_DEFINE(wenet_service,
     BT_GATT_PRIMARY_SERVICE(WENET_SERVICE_UUID),
@@ -25,11 +24,13 @@ static void adv_start_work(struct k_work *work)
     err = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, ad, ARRAY_SIZE(ad), NULL, 0);
     if (err) {
         printk("Advertising failed to start (err %d)\n", err);
+        // Retry after a delay
+        k_work_schedule(k_work_delayable_from_work(work), K_SECONDS(5));
         return;
     }
     printk("Advertising started\n");
 }
-K_WORK_DEFINE(adv_start, adv_start_work);
+K_WORK_DELAYABLE_DEFINE(adv_start, adv_start_work);
 
 // Connection callbacks
 static void connected(struct bt_conn *conn, uint8_t err)
@@ -38,9 +39,9 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
     if (err) {
-		k_work_submit(&adv_start);
-		return;
-	}
+        printk("Connection failed (err %d)\n", err);
+        return;
+    }
 
     printk("Connected: %s\n", addr);
 }
@@ -48,28 +49,13 @@ static void connected(struct bt_conn *conn, uint8_t err)
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
     printk("Disconnected (reason %u)\n", reason);
-    k_work_submit(&adv_start);
+    k_work_schedule(&adv_start, K_MSEC(500));
 }
 
 static struct bt_conn_cb conn_callbacks = {
     .connected = connected,
     .disconnected = disconnected,
 };
-
-void wenet_uart_notify(void)
-{
-    // Get a notify struct from the stack
-    struct bt_gatt_notify_params *notify;
-    int err = param_stack_get_notify(&notify);
-    if (err) {
-        printk("Failed to get notify struct from stack\n");
-        return;
-    }
-    // Set the parameters for the notification
-    
-    // Send the notification
-    // err = bt_gatt_notify(NULL, &wenet_service.attrs[1], notify->data, notify->len);
-}
 
 void wenet_uart_init(void)
 {
@@ -89,14 +75,5 @@ void wenet_service_init(void)
     bt_conn_cb_register(&conn_callbacks);
     
     // Start advertising
-    k_work_submit(&adv_start);
-}
-
-void wenet_notify_thread(void *p1, void *p2, void *p3)
-{
-    while (1) {
-        // Thread logic here
-        printk("Wenet thread running\n");
-        k_sleep(K_SECONDS(5));
-    }
+    k_work_schedule(&adv_start, K_NO_WAIT);
 }

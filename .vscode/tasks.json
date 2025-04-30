@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "West Build",
+            "type": "shell",
+            "group": "build",
+            "command": "${workspaceFolder}/../.venv/bin/west",
+            "args": [
+                "build",
+                "-b",
+                "adafruit_feather_nrf52840/nrf52840"
+            ],
+        },
+        {
+            "label": "West Build Pristine",
+            "type": "shell",
+            "group": "build",
+            "command": "${workspaceFolder}/../.venv/bin/west",
+            "args": [
+                "build",
+                "-p",
+                "-b",
+                "adafruit_feather_nrf52840/nrf52840"
+            ],
+        }
+    ]
+}
