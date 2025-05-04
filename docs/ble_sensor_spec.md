@@ -16,29 +16,14 @@
 
 ### BLE Sensor Hub Advertisement
 
-- Must advertise the 128-bit Wenet Sensor Service UUID (16 + 2 bytes)
-- Device Name (11 + 2)
+- Must advertise the 128-bit Wenet Sensor Service UUID
 
 ### Wenet Sensor Characteristic
 
 - UUID: 3d235f0e-61f8-4455-89c6-2f7d73c33178
 - Interface for reading sensor data through notification
 
-### Wenet UART Descriptor
+### Wenet UART Characteristic
 
 - UUID: 64a96749-ab48-434d-8d31-77c07e6e352f
 - BLE UART interface for Wenet text messages
-
-### Client Characteristic Configuration
-
-Standard CCC for managing notify/indicate
-
-Data packet:
-
-- Payload ID
-- Sequence Number
-- Hours
-- Minutes
-- Seconds
-- Data
-- 
